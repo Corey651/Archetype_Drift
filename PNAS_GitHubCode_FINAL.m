@@ -15,7 +15,6 @@ Ind=find(V>=.1&V<=.2);
 Gene_Labels=Names(Ind);
 DD=Data;
 
-
 DD=DD(Ind,:);
 
 % Figure S1
@@ -27,7 +26,6 @@ xlabel('Number of Components')
 ylabel('Eigenvalues')
 
 DD=DD./sum(DD,1);
-
 [W,H]=NMF(DD,2);
 
 % Plot the Archetypes (Figure 1)
@@ -65,77 +63,6 @@ hist(Corr_Table.Correlation, 40)
 hold on
 xline(0.9)
 
-%% Decreasing Genes 
-% Plot Decreasing Archetype Centers (Figure 2B)
-figure 
-plot(Time,Data(Corr_Table.Correlation<=-.90,:)')
-
-% Plot Mean Percent Change in Decreasing Genes
-figure
-decreasinggenes = Data(Corr_Table.Correlation<=-.90,:);
-meandecreasing = mean(decreasinggenes);
-percentchangedec = 100*(meandecreasing - meandecreasing(:, 1))/meandecreasing(:, 1);
-scatter(difftime, percentchangedec)
-
-% Fit Model to Percent Change in Decreasing Genes
-start2 = [1, 1];
-lower2 = [0,0];
-ptime = [0:0.1:9];
-fitfun = fittype( @(g,K,x)  (g*K)./(K+ 0.1963*x) - g);
-[fitted_curve,gof] = fit(difftime.',percentchangedec.',fitfun,'StartPoint',start2, 'Lower', lower2);
-
-% Plot results
-hold on
-plot(ptime,fitted_curve(ptime),'LineWidth',1.5);
-scatter(difftime, percentchangedec, 30)
-% Calculates R^2 and Stores in Vector
-rsquares = gof.rsquare;
-% Stores “g” and “K” values in Vector (with “g” in first column)
-coeffvals = [coeffvalues(fitted_curve)];
-
-
-% % Individual Fits Decreasing Genes (Figure S2B)
-% % This code takes a while to run.
-% ptime = [0:0.1:9];
-% t2 = [0, 2, 4, 9]';
-% individualpercentchangedecreasing = 100*(decreasinggenes - decreasinggenes(:, 1))./decreasinggenes(:, 1);
-% individualchangedecreasing = (decreasinggenes - decreasinggenes(:, 1));
-% colors = [0 0.447 0.741; 0.929 0.694 0.125; 0.466 0.674 0.188; 0.635 0.078 0.184; 0.85 0.325 0.098; 0.494 0.184 0.556; 0.301 0.745 0.933];
-% % Define Start points, fit-function
-% colorindex = 1;
-% start2 = [1, 1];
-% lower2 = [0,0];
-% fitfun = fittype( @(g,K,x)  (g*K)./(K+ 0.1963*x) - g);
-%
-% figure
-% for c = 1:1859
-% %Fit curve
-% dummy = (individualchangedecreasing(c,:))';
-% [fitted_curve,gof] = fit(t2,dummy,fitfun,'StartPoint',start2, 'Lower', lower2);
-% % Plot results
-% hold on
-% plot(ptime,fitted_curve(ptime),'LineWidth',1.5);
-% scatter(t2, dummy, 30, colors(colorindex, :),  'filled')
-% % Calculates R^2 and Stores in Vector
-% rsquares(c, 1) = gof.rsquare;
-% % Stores “g” and “K” values in Vector (with “g” in first column)
-% coeffvals(c, 1:2) = [coeffvalues(fitted_curve)];
-% colorindex = colorindex + 1;
-% if colorindex == 8
-% colorindex = 1;
-% end
-% end
-% % Histogram of Rsquares (Figure S2B)
-% figure
-% edges = linspace(0, 1, 21); % Create 20 bins.
-% % Plot the histogram.
-% histogram(rsquares, 'BinEdges',edges);
-% % Fancy up the graph.
-% xlim([0, 1]);
-% xlabel('R^2', 'FontSize', 14);
-% ylabel('Bin Count', 'FontSize', 14);
-
-
 %% Increasing Genes
 % Plot Increasing Archetype Centers (Figure 2B)
 figure
@@ -152,16 +79,16 @@ scatter(difftime, percentchangeinc)
 start2 = [1];
 lower2 = [0];
 ptime = [0:0.1:9];
-fitfun = fittype( @(a,x)  (a*x));
+fitfun = fittype( @(b,x)  (b*x));
 [fitted_curve,gof] = fit(difftime.',percentchangeinc.',fitfun,'StartPoint',start2, 'Lower', lower2);
 % Plot results
 hold on
 plot(ptime,fitted_curve(ptime),'LineWidth',1.5);
 scatter(difftime, percentchangeinc, 30)
 % Calculates R^2 and Stores in Vector
-rsquares = gof.rsquare;
+rsquaresStressCE = gof.rsquare;
 % Stores coeff values in Vector
-coeffvals = [coeffvalues(fitted_curve)];
+coeffvalsstress = [coeffvalues(fitted_curve)];
 hold off
 
 
@@ -170,7 +97,7 @@ hold off
 % ptime = [0:0.1:9];
 % t2 = [0, 2, 4, 9]';
 % individualpercentchangeincreasing = rmmissing(100*(increasinggenes - increasinggenes(:, 1))./increasinggenes(:, 1));
-% individualchangeincreasing = rmmissing((increasinggenes - increasinggenes(:, 1))); % Removes ~800 genes which have a NaN divide by 0 error
+% individualchangeincreasing = rmmissing((increasinggenes - increasinggenes(:, 1))); % Removes genes which have a NaN divide by 0 error
 % colors = [0 0.447 0.741; 0.929 0.694 0.125; 0.466 0.674 0.188; 0.635 0.078 0.184; 0.85 0.325 0.098; 0.494 0.184 0.556; 0.301 0.745 0.933];
 % colorindex = 1
 % start1 = 1;
@@ -195,6 +122,87 @@ hold off
 % end
 % end
 % % Histogram of Rsquares (Figure S2A)
+% figure
+% edges = linspace(0, 1, 21); % Create 20 bins.
+% % Plot the histogram.
+% histogram(rsquares, 'BinEdges',edges);
+% % Fancy up the graph.
+% xlim([0, 1]);
+% xlabel('R^2', 'FontSize', 14);
+% ylabel('Bin Count', 'FontSize', 14);
+
+%% Decreasing Genes 
+% Plot Decreasing Archetype Centers (Figure 2B)
+figure 
+plot(Time,Data(Corr_Table.Correlation<=-.90,:)')
+
+% Plot Mean Percent Change in Decreasing Genes
+figure
+decreasinggenes = Data(Corr_Table.Correlation<=-.90,:);
+meandecreasing = mean(decreasinggenes);
+percentchangedec = 100*(meandecreasing - meandecreasing(:, 1))/meandecreasing(:, 1);
+scatter(difftime, percentchangedec)
+
+% Fit Model to Percent Change in Decreasing Genes
+start2 = [1, 1];
+lower2 = [0,0];
+ptime = [0:0.1:9];
+fitfun = fittype( @(g,K,x)  (g*K)./(K+ coeffvalsstress*x) - g);
+[fitted_curve,gof] = fit(difftime.',percentchangedec.',fitfun,'StartPoint',start2, 'Lower', lower2);
+
+% Plot results
+hold on
+plot(ptime,fitted_curve(ptime),'LineWidth',1.5);
+scatter(difftime, percentchangedec, 30)
+% Calculates R^2 and Stores in Vector
+rsquaresGrowthCE = gof.rsquare;
+% Stores “g” and “K” values in Vector (with “g” in first column)
+coeffvalsgrowth = [coeffvalues(fitted_curve)];
+
+%AIC Calculation
+cfSSE = sum((fitted_curve(difftime).' - percentchangedec).^2);
+cfAIC = 4*log(cfSSE/4)+2*2;
+
+% Comparison linear model (a*x + b)
+start2 = [1, 1];
+lower2 = [-1000,-1000];
+fitfun = fittype( @(a,b,x)  (a*x + b));
+[fitAIC,gofAIC] = fit(difftime.',percentchangedec.',fitfun,'StartPoint',start2, 'Lower', lower2);
+linSSE = sum((fitAIC(difftime).' - percentchangedec).^2);
+linAIC = 4*log(linSSE/4)+2*2;
+
+% Individual Fits Decreasing Genes (Figure S2B)
+% This code takes a while to run.
+% ptime = [0:0.1:9];
+% t2 = [0, 2, 4, 9]';
+% individualpercentchangedecreasing = 100*(decreasinggenes - decreasinggenes(:, 1))./decreasinggenes(:, 1);
+% individualchangedecreasing = (decreasinggenes - decreasinggenes(:, 1));
+% colors = [0 0.447 0.741; 0.929 0.694 0.125; 0.466 0.674 0.188; 0.635 0.078 0.184; 0.85 0.325 0.098; 0.494 0.184 0.556; 0.301 0.745 0.933];
+% % Define Start points, fit-function
+% colorindex = 1;
+% start2 = [1, 1];
+% lower2 = [0,0];
+% fitfun = fittype( @(g,K,x)  (g*K)./(K+ coeffvalsstress*x) - g);
+% 
+% figure
+% for c = 1:1859
+% %Fit curve
+% dummy = (individualchangedecreasing(c,:))';
+% [fitted_curve,gof] = fit(t2,dummy,fitfun,'StartPoint',start2, 'Lower', lower2);
+% % Plot results
+% hold on
+% plot(ptime,fitted_curve(ptime),'LineWidth',1.5);
+% scatter(t2, dummy, 30, colors(colorindex, :),  'filled')
+% % Calculates R^2 and Stores in Vector
+% rsquares(c, 1) = gof.rsquare;
+% % Stores “g” and “K” values in Vector (with “g” in first column)
+% coeffvals(c, 1:2) = [coeffvalues(fitted_curve)];
+% colorindex = colorindex + 1;
+% if colorindex == 8
+% colorindex = 1;
+% end
+% end
+% % Histogram of Rsquares (Figure S2B)
 % figure
 % edges = linspace(0, 1, 21); % Create 20 bins.
 % % Plot the histogram.
@@ -299,11 +307,10 @@ DM2=Data_Surf1_2./sum(Data_Surf1_2,1);
 
 [W,H]=NMF((DC1+DC2)/2,2);
 
-[u,s,v]=svd((DC1+DC2)/2);  % plot(diag(s)) to see that 1 component captures most of the variance
 
 HC3=NMF_New_Weights(DC3,W,2);
 
-HM=NMF_New_Weights([DM1+DM2]/2,W,2);  % Use this to calculate archetype scores from a trained model
+HM=NMF_New_Weights([DM1+DM2]/2,W,2);
 
 % Archetype Plot (Figure 4)
 figure
@@ -390,8 +397,9 @@ hold on
 plot(ptime,fitted_curve(ptime),'LineWidth',1.5);
 scatter(difftime, percentchangeinc, 30)
 % Calculates R^2 and Stores in Vector
-rsquares = gof.rsquare;
+rsquaresStressHu = gof.rsquare;
 
+coeffvalstressHuman = [coeffvalues(fitted_curve)];
 
 %% Decreasing Genes
 % Plot Decreasing Archetype Centers (Figure 5B)
@@ -412,7 +420,7 @@ ylabel('Percent Change in Mean Gene Expression (CPM)')
 start2 = [1, 1];
 lower2 = [0,0];
 ptime = [0:0.5:180.79];
-fitfun = fittype( @(g,K,x)  (g*K)./(K+ 0.1963*x) - g);
+fitfun = fittype( @(g,K,x)  (g*K)./(K+x) - g);
 
 [fitted_curve,gof] = fit(difftime.',percentchangedec.',fitfun,'StartPoint',start2, 'Lower', lower2);
 % Plot results
@@ -420,9 +428,9 @@ hold on
 plot(ptime,fitted_curve(ptime),'LineWidth',1.5);
 scatter(difftime, percentchangedec, 30)
 % Calculates R^2 and Stores in Vector
-rsquares = gof.rsquare;
+rsquaresGrowthHu = gof.rsquare;
 % Stores “g” and “K” values in Vector (with “g” in first column)
-coeffvals = [coeffvalues(fitted_curve)];
+coeffvalsgrowthHuman = [coeffvalues(fitted_curve)];
 
 
 
